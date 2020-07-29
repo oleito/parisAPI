@@ -1,162 +1,60 @@
 <?php
+// Permite la conexion desde cualquier origen
+header("Access-Control-Allow-Origin: *");
+// Permite la ejecucion de los metodos
+header("Access-Control-Allow-Methods: *");
+header("Access-Control-Allow-Headers: *");
+header("Content-Type: application/json");
+
+
 use \Psr\Http\Message\ResponseInterface as Response;
 use \Psr\Http\Message\ServerRequestInterface as Request;
 
 require '../vendor/autoload.php';
 
-$config['displayErrorDetails'] = true;
-$config['addContentLengthHeader'] = false;
-/*
-$config['db']['host']   = 'localhost';
-$config['db']['user']   = 'user';
-$config['db']['pass']   = 'password';
-$config['db']['dbname'] = 'exampleapp';
+require_once './../src/classes/autoload_classes.php';
 
-(['settings' => $config])
- */
-$app = new \Slim\App;
+// Cambiar en prod
+$config['displayErrorDetails'] = true;
+
+$config['addContentLengthHeader'] = true;
+set_time_limit(300);
+
+$app = new \Slim\App(['settings' => $config]);
 
 /**
- *  RAIZ
+ *  CONTENEDORES
+ */
+
+$container = $app->getContainer();
+
+$container['logger'] = function ($c) {
+    $logger = new \Monolog\Logger('REPORTES');
+    $file_handler = new \Monolog\Handler\StreamHandler('../logs/app.log');
+    $logger->pushHandler($file_handler);
+    $logger->setTimezone(new DateTimeZone('America/Argentina/Buenos_Aires'));
+    return $logger;
+};
+
+/**
+ * APP
  */
 
 $app->get('/', function (Request $request, Response $response, array $args) {
 
-    $body = [];
+    $rp['data'] = '';
 
-//    if ($request->hasHeader('PHP_AUTH_USER') || $request->hasHeader('PHP_AUTH_PW')) {
-    if ($request->hasHeader('HTTP_AUTHORIZATION')) {
-        //$body = $request->getHeaders();
-        $body["HTTP_AUTHORIZATION"] = $request->getHeader("HTTP_AUTHORIZATION")[0]; //Basic
-        $body["explode"] = base64_decode(explode(" ", $body["HTTP_AUTHORIZATION"])[1]);
-        $body["Datos"] = array(
-            'usuario' => explode(":", $body["explode"])[0],
-            'pass' => explode(":", $body["explode"])[1],
-        );
-    }
+    // $this->logger->warning('Soy un warning - ', []);
+    $pdo = new pdoMysql($this->logger);
 
-    return $response
-        ->withHeader('Content-type', 'application/json')
+    $pdo->conectar();
+
+    return $response->withHeader('Content-type', 'application/json')
         ->withStatus(200)
-        ->withJson($body);
+        ->withJson($rp);
 
 });
 
-$app->post('/', function (Request $request, Response $response, array $args) {
-
-    $body = $request->getParsedBody();
-    if ($request->hasHeader('PHP_AUTH_USER') || $request->hasHeader('PHP_AUTH_PW')) {
-        //$body = $request->getHeaders();
-        $body["HTTP_AUTHORIZATION"] = $request->getHeader("HTTP_AUTHORIZATION")[0]; //Basic
-        $body["explode"] = base64_decode(explode(" ", $body["HTTP_AUTHORIZATION"])[1]);
-        $body["Datos"] = array(
-            'usuario' => explode(":", $body["explode"])[0],
-            'pass' => explode(":", $body["explode"])[1],
-        );
-    }
-
-    return $response
-        ->withHeader('Content-type', 'application/json')
-        ->withStatus(200)
-        ->withJson($body);
-});
-
-/**
- *  EJEMPLO
- */
-$app->post('/hola/{name}', function (Request $request, Response $response, array $args) {
-    $name = $args['name'];
-    $response->getBody()->write("Hola, $name");
-
-    return $response;
-});
-
-/**
- * ONLY FOR TESTING USE
- */
-$app->get('/comercios', function (Request $request, Response $response, array $args) {
-    $body = array(
-        'token' => 12345,
-        'body' => array(
-             array('Nombre' => 'sandrita','telefono' => '266 1234567'),
-             array('Nombre' => 'sandrita','telefono' => '266 1234567'),
-             array('Nombre' => 'sandrita','telefono' => '266 1234567'),
-             array('Nombre' => 'sandrita','telefono' => '266 1234567'),
-        ),
-    );
-    return $response
-        ->withHeader('Content-type', 'application/json')
-        ->withStatus(200)
-        ->withJson($body);
-});
-
-/** clase con funciones utiles */
-class utilidad
-{
-    public function __contrucc()
-    {
-
-    }
-    public function invertir($a)
-    {
-        $a = explode(".", $a);
-        $b = $a[1] . "." . $a[0];
-
-        return $b;
-    }
-
-    public function enviarCorreo($datos)
-    {
-        $name = $datos['nombre'];
-        $email = $datos['email'];
-        $titulo = 'Mensaje desde la web - ParisAutos';
-        $mensaje = '<html><body>';
-        $mensaje = 'Turno solicitado desde la web';
-        $mensaje .= '<br> Nombre: ' . $name . "\r\n";
-        $mensaje .= '<br> Email: ' . $email . "\r\n";
-        $mensaje .= '</body></html>';
-        $cabeceras = 'Content-type: text/html; charset=iso-8859-1' . "\r\n";
-        $cabeceras .= 'From: Sistemas <sistemas@parisautos.com.ar>' . "\r\n";
-        $cabeceras .= 'X-Mailer: PHP/' . phpversion() . "\r\n";
-
-        mail("sistemas@parisautos.com.ar", $titulo, $mensaje, $cabeceras);
-
-        return $mensaje;
-    }
-
-    public function setSector($sector)
-    {
-        switch ($sector) {
-            case 'postventa':
-                $para = 'recepcion.postventa@parisautos.com.ar';
-                break;
-            case 'administracionplanes': //planes
-                $para = 'diego.moreno@parisautos.com.ar';
-                break;
-            case 'administracionusados': //planes
-                $para = 'recepcion@parisautos.com.ar';
-                break;
-            case 'usados':
-                $para = 'mauro.soratto@parisautos.com.ar';
-                break;
-            case 'autoplancitroen':
-                $para = 'diego.moreno@parisautos.com.ar';
-                break;
-            case 'autoplanpeugeot':
-                $para = 'diego.moreno@parisautos.com.ar';
-                break;
-            case '0kmcitroen':
-                $para = 'mauro.soratto@parisautos.com.ar';
-                break;
-            case '0kmpeugeot':
-                $para = 'mauro.soratto@parisautos.com.ar';
-                break;
-            default:
-                $para = 'info@parisautos.com.ar';
-                break;
-        }
-        return $para;
-    }
-}
+require_once './../src/rutas/autoload_rutas.php';
 
 $app->run();

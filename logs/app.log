@@ -1,0 +1,1 @@
+[2020-07-29 16:30:56] REPORTES.WARNING: listarMarcas() -  ["SQLSTATE[42S02]: Base table or view not found: 1146 Table 'parisaut_parisapi.vhMarca' doesn't exist"] []
