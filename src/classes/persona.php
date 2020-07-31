@@ -45,10 +45,10 @@ class Persona
                 ':usuario' => $idUsuario,
 
             ));
+            return true;
         } catch (Exception $e) {
             $this->logger->warning('insertarPersona() - ', [$e->getMessage()]);
             return 500;
         }
-        return 200;
     }
 }
