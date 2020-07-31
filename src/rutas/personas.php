@@ -22,7 +22,7 @@ $app->group('/personas', function () use ($app) {
                 $bodyIn = [];
 
                 $bodyIn = $request->getParsedBody();
-                print_r($bodyIn);
+                //print_r($bodyIn);
                 $res = 200;
                 if (
                     is_array($bodyIn['data']) &&

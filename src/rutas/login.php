@@ -1,4 +1,5 @@
 <?php
+
 use \Psr\Http\Message\ResponseInterface as Response;
 use \Psr\Http\Message\ServerRequestInterface as Request;
 
@@ -25,11 +26,10 @@ $app->post('/login', function (Request $request, Response $response, array $args
             $token = new token;
             $res['token'] = $token->setToken($usuario);
 
-            $res['data'] = $usuario;
+            $res['usuario'] = $usuario;
         } else {
             $res = $usuario->login($userName, $userPassword);
         }
-
     } else {
         $res = 400;
     }
@@ -38,10 +38,9 @@ $app->post('/login', function (Request $request, Response $response, array $args
             ->withStatus($res)
             ->withJson(null);
     } else {
-        $rp['data'] = $res;
+        $rp = $res;
         return $response->withHeader('Content-type', 'application/json')
-            ->withStatus(200)
+            ->withStatus(202)
             ->withJson($rp);
     }
-
 });

@@ -22,7 +22,7 @@ class Persona
             ));
             return $sth->fetchAll();
         } catch (Exception $e) {
-            $this->logger->warning('listarPerdonas() - ', [$e->getMessage()]);
+            $this->logger->warning('listarPersonas() - ', [$e->getMessage()]);
             return 500;
         }
     }
@@ -45,25 +45,10 @@ class Persona
                 ':usuario' => $idUsuario,
 
             ));
-            return $this->listarPersonas($idUsuario);
         } catch (Exception $e) {
             $this->logger->warning('insertarPersona() - ', [$e->getMessage()]);
             return 500;
         }
+        return 200;
     }
-
-    // public function eliminarMarca($idMarca)
-    // {
-    //     $sql = "DELETE FROM vhMarca WHERE vhMarca.idvhMarca = :idMarca ;";
-    //     try {
-    //         $sth = $this->conn->prepare($sql);
-    //         $sth->execute(array(
-    //             ':idMarca' => $idMarca,
-    //         ));
-    //         return $this->listarMarcas();
-    //     } catch (Exception $e) {
-    //         $this->logger->warning('eliminar marca() - ', [$e->getMessage()]);
-    //         return 500;
-    //     }
-    // }
 }
